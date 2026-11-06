@@ -1,0 +1,10 @@
+# Bibliothèques du projet Comparateur Vélib
+# Installation (environnement activé) : pip install -r requirements.txt
+
+requests        # appeler les API Vélib et Météo-France
+pandas          # manipuler et nettoyer les données en tableau
+python-dotenv   # lire la clé API depuis le fichier .env
+rich            # afficher de jolis tableaux dans le terminal
+streamlit       # créer l'interface web
+pytest          # lancer les tests
+jupyter         # (optionnel) explorer les données bloc par bloc
