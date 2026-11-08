@@ -268,6 +268,7 @@ with onglet_nettoyage:
     st.subheader("Rapport de nettoyage")
     st.write(
         f"Sur **{rapport['stations_brutes']}** stations téléchargées : "
+        f"**{rapport['incompletes_retirees']}** station(s) incomplète(s) retirée(s) (sans code, nom ou position), "
         f"**{rapport['doublons_retires']}** doublon(s) retiré(s), "
         f"**{rapport['hors_service']}** station(s) hors service (gardées, en gris sur la carte, "
         f"mais exclues des indicateurs), dont **{rapport['capacite_nulle']}** à capacité nulle."
