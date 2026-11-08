@@ -1,0 +1,7 @@
+stationcode,name,commune,commune_norm,zone,en_service,capacity,numbikesavailable,numdocksavailable,mechanical,ebike,lat,lon
+5110,Lacépède - Monge,Paris,paris,paris 5,True,23,0,22,0,0,48.843893,2.351966
+5031,Lacépède - Linné,Paris,paris,paris 5,True,54,33,17,20,13,48.843704,2.354651
+7005,Raspail - Bac,Paris,paris,paris 7,False,52,0,52,0,0,48.855629,2.32566
+6003,Saint-Sulpice,Paris,paris,paris 6,True,21,11,6,2,9,48.851654,2.330808
+31028,Raspail Barbès,Montreuil,montreuil,montreuil,True,28,7,20,2,5,48.852995,2.424739
+31022,Mairie de Montreuil,Montreuil,montreuil,montreuil,True,52,21,30,3,18,48.861315,2.440614
