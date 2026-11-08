@@ -38,7 +38,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | #12 | B | `compare.py` (argparse + rich) | `compare-cli` | #33 | ✅ Fusionnée |
 | #13 | C | Onglet Duel de `app.py` | `app-duel` | #34 | ✅ Fusionnée |
 | #14 | A | Colonne `zone` (arrondissements) | `zone-arrondissements` | #35 | ✅ Fusionnée |
-| #15 | B | Indicateurs relatifs, zones dans `compare.py` | `indicateurs-relatifs` | — | ⏳ À faire |
+| #15 | B | Indicateurs relatifs, zones dans `compare.py` | `indicateurs-relatifs` | #36 | ✅ Fusionnée |
 | #17 | A | Gestion des erreurs | `gestion-erreurs` | — | ⏳ À faire |
 | #16 | C | Onglets Météo, Carte, rapport, bouton Actualiser | `app-meteo-carte` | — | ⏳ À faire |
 | #25 | C | Cache et heure des données | `cache-temps-reel` | — | ⏳ À faire |
