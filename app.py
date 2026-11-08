@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from src.comparaison import EGALITE, bilan, comparer
 from src.indicateurs import stats_commune
-from src.nettoyage import nettoyer_velib
+from src.nettoyage import nettoyer_velib, zones_disponibles
 from src.recuperation import telecharger_velib
 
 load_dotenv()  # lit le fichier .env (clé Météo-France) s'il existe
@@ -22,14 +22,14 @@ if not os.getenv("METEO_FRANCE_API_KEY"):
     st.sidebar.warning("Clé Météo-France absente : copie .env.example en .env et colle ta clé (voir README).")
 
 df, rapport = nettoyer_velib(telecharger_velib())
-communes = sorted(df["commune"].unique())
+zones = zones_disponibles(df)  # communes, puis « Paris 1 » à « Paris 20 »
 
 (onglet_duel,) = st.tabs(["⚔️ Duel"])
 
 with onglet_duel:
     colonne_a, colonne_b = st.columns(2)
-    nom_a = colonne_a.selectbox("Commune A", communes, index=communes.index("Paris"))
-    nom_b = colonne_b.selectbox("Commune B", communes, index=communes.index("Montreuil"))
+    nom_a = colonne_a.selectbox("Commune A", zones, index=zones.index("Paris"))
+    nom_b = colonne_b.selectbox("Commune B", zones, index=zones.index("Montreuil"))
 
     stats_a, stats_b = stats_commune(df, nom_a), stats_commune(df, nom_b)
     lignes = comparer(stats_a, stats_b, nom_a, nom_b)

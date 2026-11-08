@@ -1,6 +1,7 @@
 """Compare la disponibilité Vélib de deux communes dans le terminal.
 
 Lance : python compare.py Paris Montreuil
+        python compare.py "Paris 11" Montreuil   (arrondissements : "Paris 1" à "Paris 20")
 """
 import argparse
 
@@ -16,8 +17,8 @@ from src.recuperation import telecharger_velib
 def lire_arguments():
     """Reçoit : rien (lit la ligne de commande). Renvoie : les deux noms de communes."""
     parser = argparse.ArgumentParser(description="Compare les Vélib de deux communes.")
-    parser.add_argument("commune_a", help='première commune, ex. Paris')
-    parser.add_argument("commune_b", help='seconde commune, ex. Montreuil')
+    parser.add_argument("commune_a", help='première commune ou arrondissement, ex. Paris ou "Paris 11"')
+    parser.add_argument("commune_b", help='seconde commune ou arrondissement, ex. Montreuil')
     return parser.parse_args()
 
 
