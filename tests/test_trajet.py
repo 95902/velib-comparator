@@ -80,3 +80,28 @@ def test_stations_proches(df_test):
     assert proches["distance_m"].iloc[0] == 0
     # Saint-Sulpice et Raspail - Bac (hors service) sont dans un rayon de 2 km
     assert len(stations_proches(df_test, *SAINT_SULPICE, rayon_m=2000)) == 4
+
+
+def test_type_de_velo(df_test):
+    # Près de Saint-Sulpice : 2 mécaniques et 9 électriques
+    electrique = station_conseillee(df_test, *SAINT_SULPICE, "velo", "electrique")
+    assert (electrique["name"], electrique["nombre"]) == ("Saint-Sulpice", 9)
+    mecanique = station_conseillee(df_test, *SAINT_SULPICE, "velo", "mecanique")
+    assert (mecanique["name"], mecanique["nombre"]) == ("Saint-Sulpice", 2)
+
+
+def test_station_sans_le_type_voulu_ignoree(df_test):
+    # Saint-Sulpice n'a plus d'électrique : on va à la plus proche qui en a (Lacépède - Linné)
+    df = df_test.copy()
+    df.loc[df["name"] == "Saint-Sulpice", "ebike"] = 0
+    assert station_conseillee(df, *SAINT_SULPICE, "velo", "electrique")["name"] == "Lacépède - Linné"
+    assert station_conseillee(df, *SAINT_SULPICE, "velo")["name"] == "Saint-Sulpice"
+
+
+def test_type_ignore_pour_les_bornes(df_test):
+    assert station_conseillee(df_test, *SAINT_SULPICE, "borne", "electrique") == station_conseillee(df_test, *SAINT_SULPICE, "borne")
+
+
+def test_type_inconnu(df_test):
+    with pytest.raises(ValueError):
+        station_conseillee(df_test, *SAINT_SULPICE, "velo", "tandem")

@@ -3,6 +3,7 @@ import math
 
 RAYON_TERRE_M = 6_371_000
 COLONNE_BESOIN = {"velo": "numbikesavailable", "borne": "numdocksavailable"}
+COLONNE_TYPE = {"mecanique": "mechanical", "electrique": "ebike"}
 
 
 def distance_m(lat1, lon1, lat2, lon2):
@@ -18,21 +19,27 @@ def distance_m(lat1, lon1, lat2, lon2):
     return 2 * RAYON_TERRE_M * math.asin(math.sqrt(a))
 
 
-def station_conseillee(df, lat, lon, besoin):
+def station_conseillee(df, lat, lon, besoin, type_velo=None):
     """Trouve la meilleure station autour d'un point.
 
-    Reçoit : le tableau nettoyé, un point (lat, lon) et besoin = "velo" (pour prendre
-    un vélo) ou "borne" (pour en déposer un).
-    Renvoie : dict name, distance_m (mètres, entier), nombre (vélos ou bornes libres),
+    Reçoit : le tableau nettoyé, un point (lat, lon), besoin = "velo" (pour prendre
+    un vélo) ou "borne" (pour en déposer un), et type_velo = None (peu importe),
+    "mecanique" ou "electrique" (seulement pour besoin = "velo").
+    Renvoie : dict name, distance_m (mètres, entier), nombre (vélos du type demandé,
+    ou bornes libres),
     mechanical, ebike (vélos mécaniques / électriques), lat, lon ;
     ou None si aucune station ne convient.
-    Règles : stations en service seulement, avec au moins 1 vélo (ou 1 borne libre) ;
-    la plus proche ; à distance égale, celle qui a le plus de vélos (ou de bornes).
-    Lève ValueError si besoin n'est ni "velo" ni "borne".
+    Règles : stations en service seulement, avec au moins 1 vélo du type demandé
+    (ou 1 borne libre) ; la plus proche ; à distance égale, celle qui en a le plus.
+    Lève ValueError si besoin ou type_velo n'a pas une valeur prévue.
     """
     if besoin not in COLONNE_BESOIN:
         raise ValueError(f'besoin doit valoir "velo" ou "borne", pas {besoin!r}')
+    if type_velo is not None and type_velo not in COLONNE_TYPE:
+        raise ValueError(f'type_velo doit valoir None, "mecanique" ou "electrique", pas {type_velo!r}')
     colonne = COLONNE_BESOIN[besoin]
+    if besoin == "velo" and type_velo:
+        colonne = COLONNE_TYPE[type_velo]  # on ne compte que les vélos du type voulu
 
     candidates = df[df["en_service"] & (df[colonne] >= 1)].copy()
     if candidates.empty:

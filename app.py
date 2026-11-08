@@ -14,7 +14,7 @@ from src.indicateurs import etat_station, stations_de, stats_commune
 from src.meteo import CleMeteoAbsente, meteo_actuelle
 from src.nettoyage import nettoyer_velib, zones_disponibles
 from src.recuperation import DonneesIndisponibles, charger_utilisateurs, charger_velib_brut
-from src.trajet import distance_m, station_conseillee, stations_proches
+from src.trajet import COLONNE_TYPE, distance_m, station_conseillee, stations_proches
 
 # Couleur de chaque état de station sur la carte (rouge, vert, bleu, opacité)
 COULEURS = {
@@ -24,6 +24,8 @@ COULEURS = {
     "hors service": [150, 150, 150, 160],
 }
 TOUTES = "Toutes les stations"
+# Choix du type de vélo dans « Mon trajet » : libellé affiché → valeur de station_conseillee()
+TYPES_VELO = {"Peu importe": None, "⚡ Électrique": "electrique", "🚲 Mécanique": "mecanique"}
 
 
 @st.cache_data(ttl=60, show_spinner="Téléchargement des données Vélib…")
@@ -109,20 +111,25 @@ with onglet_trajet:
         lieux = list(utilisateurs[nom])
         depart = choix_depart.selectbox("Départ", lieux, index=0)
         arrivee = choix_arrivee.selectbox("Arrivée", lieux, index=min(1, len(lieux) - 1))
+        libelle_type = st.radio("Type de vélo", list(TYPES_VELO), horizontal=True)
+        type_velo = TYPES_VELO[libelle_type]
         rayon = st.slider("Stations affichées autour du départ et de l'arrivée (mètres)", 200, 1500, 500, step=100)
         point_depart, point_arrivee = utilisateurs[nom][depart], utilisateurs[nom][arrivee]
 
-        prise = station_conseillee(df, point_depart["lat"], point_depart["lon"], "velo")
+        prise = station_conseillee(df, point_depart["lat"], point_depart["lon"], "velo", type_velo)
         depot = station_conseillee(df, point_arrivee["lat"], point_arrivee["lon"], "borne")
 
         if depart == arrivee:
             st.info("Choisis deux lieux différents.")
+        elif prise is None and type_velo:
+            st.error(f"Aucune station en service n'a de vélo {libelle_type.split()[1].lower()} en ce moment.")
         elif prise is None or depot is None:
             st.error("Aucune station en service ne convient pour ce trajet en ce moment.")
         else:
+            velo = {None: "un vélo", "electrique": "un vélo ⚡ électrique", "mecanique": "un vélo 🚲 mécanique"}[type_velo]
             st.success(
-                f"{nom}, {depart} → {arrivee} : prends un vélo à **{prise['name']}** "
-                f"({prise['nombre']} vélos : {prise['mechanical']} 🚲 mécaniques, {prise['ebike']} ⚡ électriques, "
+                f"{nom}, {depart} → {arrivee} : prends {velo} à **{prise['name']}** "
+                f"({prise['mechanical'] + prise['ebike']} vélos : {prise['mechanical']} 🚲 mécaniques, {prise['ebike']} ⚡ électriques, "
                 f"{prise['distance_m']} m), dépose-le à **{depot['name']}** "
                 f"({depot['nombre']} bornes libres, {depot['distance_m']} m)."
             )
@@ -132,6 +139,12 @@ with onglet_trajet:
 
             # Toutes les stations autour du départ et de l'arrivée, colorées selon leur état
             autour_depart = stations_proches(df, point_depart["lat"], point_depart["lon"], rayon)
+            masquees = 0
+            if type_velo:
+                # Au départ, on ne garde que les stations qui ont au moins un vélo du type choisi
+                avec_type = autour_depart[COLONNE_TYPE[type_velo]] >= 1
+                masquees = int((~avec_type).sum())
+                autour_depart = autour_depart[avec_type]
             autour_arrivee = stations_proches(df, point_arrivee["lat"], point_arrivee["lon"], rayon)
             autour = pd.concat([autour_depart, autour_arrivee]).drop_duplicates("stationcode")
             autour["etat"] = etat_station(autour)
@@ -183,6 +196,8 @@ with onglet_trajet:
                 (f"Autour de l'arrivée ({arrivee})", autour_arrivee),
             ]:
                 st.markdown(f"**{titre}** : {len(stations)} station(s) à moins de {rayon} m")
+                if masquees and stations is autour_depart:
+                    st.caption(f"{masquees} station(s) masquée(s) : aucun vélo {libelle_type.split()[1].lower()} disponible.")
                 stations = stations.assign(etat=etat_station(stations))
                 st.dataframe(stations[list(colonnes_tableau)].rename(columns=colonnes_tableau), hide_index=True)
 
