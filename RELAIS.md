@@ -49,6 +49,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | #18 | B | Relecture et nettoyage | `relecture` | #43 | ✅ Fusionnée |
 | #19 | C | README | `readme` | #44 | ✅ Fusionnée |
 | — | C | Mon trajet : stations autour du trajet, vélos mécaniques / électriques, lieux réalistes | `trajet-stations-proches` | #45 | ✅ Fusionnée |
+| — | C | Mon trajet : filtre vélo électrique / mécanique | `filtre-type-velo` | — | ⏳ À faire |
 | #20 | Équipe | Checklist finale | — | — | Vérifiée en commentaire sur l'issue (points humains à cocher en équipe) |
 
 ## Points à faire par l'équipe (non automatisables)
