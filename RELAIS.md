@@ -53,7 +53,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | — | C | Mon trajet : filtre vélo électrique / mécanique | `filtre-type-velo` | #46 | ✅ Fusionnée |
 | — | C | Carte : filtre vélo électrique / mécanique | `carte-type-velo` | #47 | ✅ Fusionnée |
 | — | A | Panne de l'open data : réponses vides refusées, CSV de secours protégé | `donnees-velib-invalides` | #48 | ✅ Fusionnée |
-| #22 | Bonus | Météo et vélos : part d'électriques, température, comparaison à heure égale | `analyse-meteo-usage` | — | ⏳ À faire |
+| #22 | Bonus | Météo et vélos : part d'électriques, température, comparaison à heure égale | `analyse-meteo-usage` | #49 | ✅ Fusionnée |
 | #20 | Équipe | Checklist finale | — | — | Vérifiée en commentaire sur l'issue (points humains à cocher en équipe) |
 
 ## Points à faire par l'équipe (non automatisables)
