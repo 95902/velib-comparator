@@ -29,7 +29,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 
 | Issue | Rôle | Sujet | Branche | PR | Statut |
 |---|---|---|---|---|---|
-| — | Équipe | Fichier relais | `relais` | — | ⏳ À faire |
+| — | Équipe | Fichier relais | `relais` | #27 | ✅ Fusionnée |
 | #8 | A | `nettoyer_velib()`, `normaliser()`, rapport | `nettoyage-velib` | — | ⏳ À faire |
 | #6 | B | `stats_commune()` + `tests/donnees_test.csv` | `stats-commune` | — | ⏳ À faire |
 | #9 | B | `comparer()` et ses tests | `comparer` | — | ⏳ À faire |
