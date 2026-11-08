@@ -5,7 +5,7 @@ import pandas as pd
 
 # Colonnes du tableau nettoyé, dans l'ordre du contrat
 COLONNES_CONTRAT = [
-    "stationcode", "name", "commune", "commune_norm", "en_service",
+    "stationcode", "name", "commune", "commune_norm", "zone", "en_service",
     "capacity", "numbikesavailable", "numdocksavailable", "mechanical", "ebike",
     "lat", "lon", "duedate",
 ]
@@ -24,6 +24,36 @@ def normaliser(texte):
     texte = "".join(c for c in texte if not unicodedata.combining(c))
     texte = texte.lower().replace("-", " ").replace("'", " ").replace("’", " ")
     return " ".join(texte.split())
+
+
+def zone_station(stationcode, commune_norm):
+    """Donne la zone d'une station : sa commune, ou son arrondissement à Paris.
+
+    Reçoit : le stationcode (texte) et la commune normalisée.
+    Renvoie : la zone normalisée, ex. "montreuil", "paris 11".
+    À Paris, le code commence par le numéro d'arrondissement : "10202" → "paris 10",
+    "3012" → "paris 3". Un code hors de cette règle (ex. "60001") donne "paris".
+    """
+    if commune_norm != "paris":
+        return commune_norm
+    debut = stationcode[:-3]  # on enlève les 3 derniers chiffres
+    if debut.isdigit() and 1 <= int(debut) <= 20:
+        return f"paris {int(debut)}"
+    return "paris"
+
+
+def zones_disponibles(df):
+    """Liste les noms qu'on peut comparer, pour les listes déroulantes.
+
+    Reçoit : le tableau nettoyé.
+    Renvoie : les communes triées (« Paris » compris), puis « Paris 1 » à « Paris 20 ».
+    """
+    communes = sorted(df["commune"].unique())
+    arrondissements = sorted(
+        (z for z in df["zone"].unique() if z.startswith("paris ")),
+        key=lambda z: int(z.split()[1]),
+    )
+    return communes + [z.title() for z in arrondissements]
 
 
 def nettoyer_velib(df_brut):
@@ -65,6 +95,7 @@ def nettoyer_velib(df_brut):
         & ~capacite_nulle
     )
     df["commune_norm"] = df["commune"].map(normaliser)
+    df["zone"] = [zone_station(code, commune) for code, commune in zip(df["stationcode"], df["commune_norm"])]
 
     # 5. On ne garde que les colonnes du contrat
     df = df[COLONNES_CONTRAT].reset_index(drop=True)

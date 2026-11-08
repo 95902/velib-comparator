@@ -2,7 +2,7 @@
 import pandas as pd
 import pytest
 
-from src.nettoyage import COLONNES_CONTRAT, nettoyer_velib, normaliser
+from src.nettoyage import COLONNES_CONTRAT, nettoyer_velib, normaliser, zone_station, zones_disponibles
 
 
 def station(code, commune="Paris", installee="OUI", pret="OUI", capacite=20, velos=5, bornes=15):
@@ -69,6 +69,25 @@ def test_colonnes_et_types(brut):
     assert df["stationcode"].tolist() == ["1001", "2002", "3003", "31022"]
     assert df["capacity"].dtype.kind == "i"
     assert df.loc[3, "commune_norm"] == "montreuil"
+
+
+@pytest.mark.parametrize("code, commune, attendu", [
+    ("10202", "paris", "paris 10"),
+    ("3012", "paris", "paris 3"),
+    ("20106", "paris", "paris 20"),
+    ("60001", "paris", "paris"),        # Invalides - Quai d'Orsay : hors règle
+    ("31022", "montreuil", "montreuil"),
+])
+def test_zone_station(code, commune, attendu):
+    assert zone_station(code, commune) == attendu
+
+
+def test_zone_dans_le_tableau(brut):
+    df, _ = nettoyer_velib(brut)
+    assert dict(zip(df["stationcode"], df["zone"])) == {
+        "1001": "paris 1", "2002": "paris 2", "3003": "paris 3", "31022": "montreuil",
+    }
+    assert zones_disponibles(df) == ["Montreuil", "Paris", "Paris 1", "Paris 2", "Paris 3"]
 
 
 def test_brut_inchange(brut):
