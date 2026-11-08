@@ -108,7 +108,7 @@ with onglet_trajet:
         nom = choix_utilisateur.selectbox("Utilisateur", list(utilisateurs))
         lieux = list(utilisateurs[nom])
         depart = choix_depart.selectbox("Départ", lieux, index=0)
-        arrivee = choix_arrivee.selectbox("Arrivée", lieux, index=1)
+        arrivee = choix_arrivee.selectbox("Arrivée", lieux, index=min(1, len(lieux) - 1))
         point_depart, point_arrivee = utilisateurs[nom][depart], utilisateurs[nom][arrivee]
 
         prise = station_conseillee(df, point_depart["lat"], point_depart["lon"], "velo")
@@ -185,12 +185,13 @@ with onglet_meteo:
 with onglet_pluie:
     st.subheader("Effet de la pluie sur le remplissage")
     historique = lire_historique()
-    if historique is None:
-        st.info("Aucun historique pour l'instant : lance `python collecter.py` (un relevé toutes les 15 minutes).")
+    releves = None if historique is None else par_releve(historique)
+    if releves is None or releves.empty:
+        st.info("Aucun relevé avec météo pour l'instant : lance `python collecter.py` (un relevé toutes les 15 minutes).")
     else:
-        releves = par_releve(historique)
-        st.markdown(conclusion(effet_pluie(historique)))
-        st.dataframe(effet_pluie(historique))
+        effet = effet_pluie(historique)
+        st.markdown(conclusion(effet))
+        st.dataframe(effet)
         st.caption(f"{len(releves)} relevés, du {releves['horodatage'].min():%d/%m %H:%M} au {releves['horodatage'].max():%d/%m %H:%M} (UTC)")
         st.line_chart(releves.set_index("horodatage")[["taux_moyen"]], y_label="Taux moyen (%)")
         st.bar_chart(releves.set_index("horodatage")[["pluie_mm"]], y_label="Pluie (mm / 6 min)")
