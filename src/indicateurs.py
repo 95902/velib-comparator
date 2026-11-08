@@ -20,16 +20,17 @@ def stations_de(df, nom):
     return df[(df["commune_norm"] == nom_norm) | (df["zone"] == nom_norm)]
 
 
-def etat_station(df):
+def etat_station(df, colonne_velos="numbikesavailable"):
     """Donne l'état de chaque station, pour colorer la carte.
 
-    Reçoit : le tableau nettoyé.
-    Renvoie : une Series de textes alignée sur df : "hors service", "vide" (0 vélo),
-    "pleine" (0 borne libre) ou "disponible".
+    Reçoit : le tableau nettoyé et la colonne des vélos à compter : "numbikesavailable"
+    (tous), "ebike" (électriques seulement) ou "mechanical" (mécaniques seulement).
+    Renvoie : une Series de textes alignée sur df : "hors service", "vide" (0 vélo
+    de ce type), "pleine" (0 borne libre) ou "disponible".
     """
     etat = pd.Series("disponible", index=df.index)
     etat[df["numdocksavailable"] == 0] = "pleine"
-    etat[df["numbikesavailable"] == 0] = "vide"
+    etat[df[colonne_velos] == 0] = "vide"
     etat[~df["en_service"]] = "hors service"
     return etat
 

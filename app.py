@@ -202,12 +202,17 @@ with onglet_trajet:
                 st.dataframe(stations[list(colonnes_tableau)].rename(columns=colonnes_tableau), hide_index=True)
 
 with onglet_carte:
-    choix = st.selectbox("Zone à afficher", [TOUTES] + zones)
+    choix_zone, choix_type_carte = st.columns([2, 3])
+    choix = choix_zone.selectbox("Zone à afficher", [TOUTES] + zones)
+    libelle_type_carte = choix_type_carte.radio("Type de vélo", list(TYPES_VELO), horizontal=True, key="type_carte")
+    type_carte = TYPES_VELO[libelle_type_carte]
     carte = (df if choix == TOUTES else stations_de(df, choix)).copy()
-    carte["etat"] = etat_station(carte)
+    # Avec un type choisi, une station est « vide » s'il ne reste aucun vélo de ce type
+    carte["etat"] = etat_station(carte, COLONNE_TYPE[type_carte] if type_carte else "numbikesavailable")
     carte["couleur"] = carte["etat"].map(COULEURS)
 
-    st.caption("🟢 disponible · 🔴 vide · 🟠 pleine · ⚪ hors service — survole un point pour le détail")
+    vide = f"aucun vélo {libelle_type_carte.split()[1].lower()}" if type_carte else "vide"
+    st.caption(f"🟢 disponible · 🔴 {vide} · 🟠 pleine · ⚪ hors service — survole un point pour le détail")
     st.pydeck_chart(pdk.Deck(
         map_style=None,  # fond de carte par défaut de Streamlit, sans clé
         initial_view_state=pdk.ViewState(
@@ -225,7 +230,10 @@ with onglet_carte:
         )],
         tooltip={"text": "{name}\n{etat}\n{numbikesavailable} vélos · {numdocksavailable} bornes libres"},
     ))
-    st.write(carte["etat"].value_counts().rename("stations"))
+    en_service = carte[carte["en_service"]]
+    total_meca, total_elec = int(en_service["mechanical"].sum()), int(en_service["ebike"].sum())
+    st.caption(f"Dans cette zone : {total_meca} 🚲 mécaniques et {total_elec} ⚡ électriques disponibles.")
+    st.write(carte["etat"].replace("vide", vide).value_counts().rename("stations"))
 
 with onglet_meteo:
     st.subheader("Météo du moment à Paris (station Montsouris)")

@@ -62,3 +62,13 @@ def test_etat_station(df_test):
     assert etats["Lacépède - Monge"] == "vide"
     assert etats["Raspail - Bac"] == "hors service"   # 0 vélo, mais hors service d'abord
     assert etats["Saint-Sulpice"] == "disponible"
+
+
+def test_etat_station_par_type(df_test):
+    # Lacépède - Linné : 20 mécaniques, 13 électriques ; Saint-Sulpice : 2 et 9
+    df = df_test.copy()
+    df.loc[df["name"] == "Saint-Sulpice", "ebike"] = 0
+    etats = dict(zip(df["name"], etat_station(df, "ebike")))
+    assert etats["Saint-Sulpice"] == "vide"          # plus d'électrique, même s'il reste des mécaniques
+    assert etats["Lacépède - Linné"] == "disponible"
+    assert dict(zip(df["name"], etat_station(df)))["Saint-Sulpice"] == "disponible"
