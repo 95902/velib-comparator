@@ -44,7 +44,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | #16 | C | Onglets Météo, Carte, rapport, bouton Actualiser | `app-meteo-carte` | #38 | ✅ Fusionnée |
 | #25 | C | Cache et heure des données | `cache-temps-reel` | #39 | ✅ Fusionnée |
 | #26 | A/B/C | Utilisateurs et station conseillée | `mon-trajet` | #40 | ✅ Fusionnée |
-| #21 | Bonus | Collecte de l'historique | `collecte-historique` | — | ⏳ À faire |
+| #21 | Bonus | Collecte de l'historique | `collecte-historique` | #41 | ✅ Fusionnée |
 | #22 | Bonus | Effet de la pluie | `effet-pluie` | — | ⏳ À faire |
 | #18 | B | Relecture et nettoyage | `relecture` | — | ⏳ À faire |
 | #19 | C | README | `readme` | — | ⏳ À faire |
