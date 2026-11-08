@@ -104,3 +104,12 @@ def test_vraies_donnees():
     assert rapport["stations_finales"] == len(df) > 1000
     assert df["stationcode"].is_unique
     assert not df.loc[df["capacity"] == 0, "en_service"].any()
+
+
+def test_stations_incompletes_retirees(brut):
+    # Panne partielle de l'open data : une station arrive sans code ni position
+    brut.loc[2, ["stationcode", "coordonnees_geo.lat"]] = None
+    df, rapport = nettoyer_velib(brut)
+    assert rapport["incompletes_retirees"] == 1
+    assert "None" not in df["stationcode"].tolist() and "nan" not in df["stationcode"].tolist()
+    assert len(df) == rapport["stations_finales"] == 3

@@ -89,17 +89,24 @@ def nettoyer_velib(df_brut):
     Reçoit : le DataFrame brut renvoyé par telecharger_velib() (ou relu depuis le CSV).
     Renvoie : (df, rapport)
       - df : le tableau nettoyé, colonnes de COLONNES_CONTRAT ;
-      - rapport : dict avec stations_brutes, doublons_retires, hors_service,
-        capacite_nulle, stations_finales.
+      - rapport : dict avec stations_brutes, incompletes_retirees, doublons_retires,
+        hors_service, capacite_nulle, stations_finales.
     Les stations hors service ne sont pas supprimées : elles ont en_service = False.
     """
     df = df_brut.copy()
-    df["stationcode"] = df["stationcode"].astype(str)
     stations_brutes = len(df)
 
+    # 0. Stations incomplètes (panne de l'open data) : sans code, nom, commune ou position,
+    #    on ne peut ni les compter ni les placer sur la carte
+    essentielles = ["stationcode", "name", "nom_arrondissement_communes", "coordonnees_geo.lat", "coordonnees_geo.lon"]
+    df = df.dropna(subset=[colonne for colonne in essentielles if colonne in df.columns])
+    incompletes_retirees = stations_brutes - len(df)
+    df["stationcode"] = df["stationcode"].astype(str)
+
     # 1. Doublons : une seule ligne par station
+    avant_doublons = len(df)
     df = df.drop_duplicates(subset="stationcode")
-    doublons_retires = stations_brutes - len(df)
+    doublons_retires = avant_doublons - len(df)
 
     # 2. Noms du contrat (station_opening_hours, vide partout, disparaît à l'étape 5)
     df = df.rename(columns={
@@ -129,6 +136,7 @@ def nettoyer_velib(df_brut):
 
     rapport = {
         "stations_brutes": stations_brutes,
+        "incompletes_retirees": incompletes_retirees,
         "doublons_retires": doublons_retires,
         "hors_service": int((~df["en_service"]).sum()),
         "capacite_nulle": int(capacite_nulle.sum()),

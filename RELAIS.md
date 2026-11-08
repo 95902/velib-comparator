@@ -51,6 +51,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | — | C | Mon trajet : stations autour du trajet, vélos mécaniques / électriques, lieux réalistes | `trajet-stations-proches` | #45 | ✅ Fusionnée |
 | — | C | Mon trajet : filtre vélo électrique / mécanique | `filtre-type-velo` | #46 | ✅ Fusionnée |
 | — | C | Carte : filtre vélo électrique / mécanique | `carte-type-velo` | #47 | ✅ Fusionnée |
+| — | A | Panne de l'open data : réponses vides refusées, CSV de secours protégé | `donnees-velib-invalides` | — | ⏳ À faire |
 | #20 | Équipe | Checklist finale | — | — | Vérifiée en commentaire sur l'issue (points humains à cocher en équipe) |
 
 ## Points à faire par l'équipe (non automatisables)
