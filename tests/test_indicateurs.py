@@ -1,7 +1,7 @@
 """Tests de stats_commune() sur les stations figées (résultats vérifiés à la main)."""
 import pytest
 
-from src.indicateurs import pourcentage, stats_commune
+from src.indicateurs import etat_station, pourcentage, stats_commune
 
 
 def test_paris(df_test):
@@ -55,3 +55,10 @@ def test_commune_introuvable(df_test):
 def test_pourcentage():
     assert pourcentage(1, 3) == 33.3
     assert pourcentage(5, 0) == 0.0
+
+
+def test_etat_station(df_test):
+    etats = dict(zip(df_test["name"], etat_station(df_test)))
+    assert etats["Lacépède - Monge"] == "vide"
+    assert etats["Raspail - Bac"] == "hors service"   # 0 vélo, mais hors service d'abord
+    assert etats["Saint-Sulpice"] == "disponible"
