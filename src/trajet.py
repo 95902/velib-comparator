@@ -24,7 +24,8 @@ def station_conseillee(df, lat, lon, besoin):
     Reçoit : le tableau nettoyé, un point (lat, lon) et besoin = "velo" (pour prendre
     un vélo) ou "borne" (pour en déposer un).
     Renvoie : dict name, distance_m (mètres, entier), nombre (vélos ou bornes libres),
-    lat, lon ; ou None si aucune station ne convient.
+    mechanical, ebike (vélos mécaniques / électriques), lat, lon ;
+    ou None si aucune station ne convient.
     Règles : stations en service seulement, avec au moins 1 vélo (ou 1 borne libre) ;
     la plus proche ; à distance égale, celle qui a le plus de vélos (ou de bornes).
     Lève ValueError si besoin n'est ni "velo" ni "borne".
@@ -46,6 +47,23 @@ def station_conseillee(df, lat, lon, besoin):
         "name": meilleure["name"],
         "distance_m": int(meilleure["distance_m"]),
         "nombre": int(meilleure[colonne]),
+        "mechanical": int(meilleure["mechanical"]),
+        "ebike": int(meilleure["ebike"]),
         "lat": float(meilleure["lat"]),
         "lon": float(meilleure["lon"]),
     }
+
+
+def stations_proches(df, lat, lon, rayon_m=500):
+    """Liste les stations autour d'un point, de la plus proche à la plus lointaine.
+
+    Reçoit : le tableau nettoyé, un point (lat, lon) et un rayon en mètres.
+    Renvoie : les lignes du tableau situées dans le rayon (hors service comprises),
+    avec une colonne distance_m (mètres, entier) en plus, triées par distance.
+    """
+    proches = df.copy()
+    proches["distance_m"] = [
+        round(distance_m(lat, lon, lat_station, lon_station))
+        for lat_station, lon_station in zip(proches["lat"], proches["lon"])
+    ]
+    return proches[proches["distance_m"] <= rayon_m].sort_values("distance_m")

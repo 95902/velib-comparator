@@ -2,23 +2,23 @@
   {
     "nom": "Alice",
     "lieux": {
-      "domicile": {"lat": 48.8516, "lon": 2.3308},
-      "travail": {"lat": 48.8331, "lon": 2.2994}
+      "domicile": {"lat": 48.8457, "lon": 2.3268},
+      "travail": {"lat": 48.8380, "lon": 2.2920}
     }
   },
   {
     "nom": "Bruno",
     "lieux": {
-      "domicile": {"lat": 48.8610, "lon": 2.4410},
-      "travail": {"lat": 48.8443, "lon": 2.3744},
-      "sport": {"lat": 48.8473, "lon": 2.4390}
+      "domicile": {"lat": 48.8585, "lon": 2.4300},
+      "travail": {"lat": 48.8370, "lon": 2.3870},
+      "sport": {"lat": 48.8445, "lon": 2.4330}
     }
   },
   {
     "nom": "Chloé",
     "lieux": {
-      "domicile": {"lat": 48.9350, "lon": 2.3570},
-      "université": {"lat": 48.8467, "lon": 2.3549}
+      "domicile": {"lat": 48.9195, "lon": 2.3440},
+      "université": {"lat": 48.8463, "lon": 2.3560}
     }
   }
 ]
