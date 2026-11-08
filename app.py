@@ -7,7 +7,7 @@ import pydeck as pdk
 import requests
 import streamlit as st
 
-from src.analyse_pluie import conclusion, effet_pluie, par_releve
+from src.analyse_pluie import conclusion, effet_pluie, effet_pluie_heure_egale, effet_temperature, par_releve
 from src.collecte import lire_historique
 from src.comparaison import EGALITE, bilan, comparer
 from src.indicateurs import etat_station, stations_de, stats_commune
@@ -67,7 +67,7 @@ st.sidebar.caption(f"🚲 Vélib mis à jour à {heure_paris(df['duedate'].max()
 zones = zones_disponibles(df)  # communes, puis « Paris 1 » à « Paris 20 »
 
 onglet_duel, onglet_trajet, onglet_carte, onglet_meteo, onglet_pluie, onglet_nettoyage = st.tabs(
-    ["⚔️ Duel", "🧭 Mon trajet", "🗺️ Carte", "🌦️ Météo", "🌧️ Pluie", "🧹 Nettoyage"]
+    ["⚔️ Duel", "🧭 Mon trajet", "🗺️ Carte", "🌦️ Météo", "🌧️ Météo et vélos", "🧹 Nettoyage"]
 )
 
 with onglet_duel:
@@ -251,18 +251,53 @@ with onglet_meteo:
         st.caption(f"Météo relevée à {heure_paris(meteo['heure_releve'])} (mise à jour toutes les 6 minutes)")
 
 with onglet_pluie:
-    st.subheader("Effet de la pluie sur le remplissage")
+    st.subheader("La météo change-t-elle l'usage des Vélib ?")
+    st.caption(
+        "L'API ne donne pas les trajets, seulement les vélos garés. Si moins de gens roulent, plus de vélos "
+        "restent en station : le **taux de remplissage monte**. Si les électriques sont préférés, ils partent "
+        "d'abord : la **part d'électriques en station baisse**."
+    )
     historique = lire_historique()
     releves = None if historique is None else par_releve(historique)
     if releves is None or releves.empty:
         st.info("Aucun relevé avec météo pour l'instant : lance `python collecter.py` (un relevé toutes les 15 minutes).")
     else:
-        effet = effet_pluie(historique)
-        st.markdown(conclusion(effet))
-        st.dataframe(effet)
-        st.caption(f"{len(releves)} relevés, du {releves['horodatage'].min():%d/%m %H:%M} au {releves['horodatage'].max():%d/%m %H:%M} (UTC)")
-        st.line_chart(releves.set_index("horodatage")[["taux_moyen"]], y_label="Taux moyen (%)")
-        st.bar_chart(releves.set_index("horodatage")[["pluie_mm"]], y_label="Pluie (mm / 6 min)")
+        debut_releves = releves["horodatage"].min().tz_convert("Europe/Paris")
+        fin_releves = releves["horodatage"].max().tz_convert("Europe/Paris")
+        nb_pluie = int((releves["pluie_mm"] > 0).sum())
+        st.caption(f"{len(releves)} relevés du {debut_releves:%d/%m %H:%M} au {fin_releves:%d/%m %H:%M}, dont {nb_pluie} sous la pluie.")
+
+        st.markdown("#### 🌧️ Pluie")
+        st.markdown(conclusion(historique))
+        heure_egale = effet_pluie_heure_egale(historique)
+        if not heure_egale.empty:
+            st.markdown("Comparaison **à heure égale** (même heure, même type de jour) :")
+            st.dataframe(heure_egale.rename(columns={
+                "taux_sans": "Taux sec (%)", "taux_avec": "Taux pluie (%)", "ecart_taux": "Écart taux",
+                "elec_sans": "⚡ sec (%)", "elec_avec": "⚡ pluie (%)", "ecart_elec": "Écart ⚡",
+                "nb_avec": "Relevés pluie", "nb_sans": "Relevés sec",
+            }))
+        with st.expander("Comparaison globale, toutes heures confondues (moins fiable)"):
+            st.dataframe(effet_pluie(historique).rename(columns={
+                "nb_releves": "Relevés", "taux_moyen": "Taux moyen (%)",
+                "part_electriques": "Part d'électriques (%)", "velos_dispo": "Vélos en station",
+            }))
+
+        st.markdown("#### 🌡️ Température")
+        temperature = effet_temperature(historique)
+        if len(temperature) < 2:
+            st.info("Toutes les mesures sont dans la même tranche de température : il faut des jours plus froids ou plus chauds pour comparer.")
+        st.dataframe(temperature.rename(columns={
+            "nb_releves": "Relevés", "taux_moyen": "Taux moyen (%)", "part_electriques": "Part d'électriques (%)",
+        }))
+
+        st.markdown("#### 📈 Au fil du temps")
+        courbes = releves.set_index("horodatage")
+        st.line_chart(courbes[["taux_moyen", "part_electriques"]].rename(
+            columns={"taux_moyen": "Taux de remplissage (%)", "part_electriques": "Part d'électriques (%)"}))
+        st.line_chart(courbes[["temperature_c"]].rename(columns={"temperature_c": "Température (°C)"}))
+        st.bar_chart(courbes[["pluie_mm"]].rename(columns={"pluie_mm": "Pluie (mm / 6 min)"}))
+        st.caption("Heures en UTC sur les graphiques (Paris = UTC + 1 en hiver).")
 
 with onglet_nettoyage:
     st.subheader("Rapport de nettoyage")

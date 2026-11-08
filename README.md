@@ -79,7 +79,7 @@ streamlit run app.py
 | 🧭 Mon trajet | Pour un utilisateur (inventé) et un trajet : la station où prendre un vélo et celle où le déposer, et toutes les stations autour du départ et de l'arrivée (vélos mécaniques, électriques, bornes libres) ; filtre ⚡ électrique / 🚲 mécanique |
 | 🗺️ Carte | Toutes les stations : 🟢 disponible, 🔴 vide, 🟠 pleine, ⚪ hors service ; détail au survol ; filtre ⚡ électrique / 🚲 mécanique (🔴 = aucun vélo de ce type) |
 | 🌦️ Météo | Température, vent et pluie à Paris-Montsouris |
-| 🌧️ Pluie | Effet de la pluie sur le remplissage, d'après l'historique collecté |
+| 🌧️ Météo et vélos | Effet de la pluie et de la température sur le remplissage des stations et la part de vélos électriques, comparé **à heure égale**, d'après l'historique collecté |
 | 🧹 Nettoyage | Rapport de nettoyage : stations téléchargées, doublons, hors service, capacités nulles |
 
 Le bouton **🔄 Actualiser** retélécharge les données. Sinon, les données Vélib sont gardées 1 minute et la météo 10 minutes.
@@ -98,7 +98,7 @@ python collecter.py              # un relevé toutes les 15 minutes, Ctrl+C pour
 python collecter.py --une-fois   # un seul relevé
 ```
 
-Les relevés s'ajoutent dans `data/historique/releves.csv` (ignoré par git) et alimentent l'onglet 🌧️ Pluie.
+Les relevés s'ajoutent dans `data/historique/releves.csv` (ignoré par git) et alimentent l'onglet 🌧️ Météo et vélos. Il faut plusieurs jours de collecte, avec et sans pluie, pour conclure.
 
 ### Autres commandes
 
