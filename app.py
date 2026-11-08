@@ -2,6 +2,7 @@
 
 Lance : streamlit run app.py
 """
+import pandas as pd
 import pydeck as pdk
 import requests
 import streamlit as st
@@ -21,20 +22,43 @@ COULEURS = {
 }
 TOUTES = "Toutes les stations"
 
+
+@st.cache_data(ttl=60, show_spinner="Téléchargement des données Vélib…")
+def charger_velib():
+    """Reçoit : rien. Renvoie : (df nettoyé, rapport, en_direct), gardés en mémoire 1 minute."""
+    df_brut, en_direct = charger_velib_brut()
+    df, rapport = nettoyer_velib(df_brut)
+    return df, rapport, en_direct
+
+
+@st.cache_data(ttl=600, show_spinner="Lecture de la météo…")
+def charger_meteo():
+    """Reçoit : rien. Renvoie : le dict de meteo_actuelle(), gardé en mémoire 10 minutes."""
+    return meteo_actuelle()
+
+
+def heure_paris(date):
+    """Reçoit : une date UTC (ou NaT). Renvoie : l'heure de Paris au format « 10 h 48 »."""
+    if pd.isna(date):
+        return "heure inconnue"
+    return date.tz_convert("Europe/Paris").strftime("%H h %M")
+
+
 st.set_page_config(page_title="Comparateur Vélib", page_icon="🚲", layout="wide")
 st.title("🚲 Comparateur Vélib")
 
-if st.sidebar.button("🔄 Actualiser", help="Retélécharge les données Vélib et la météo"):
+if st.sidebar.button("🔄 Actualiser", help="Vide le cache : retélécharge les données Vélib et la météo"):
+    st.cache_data.clear()
     st.rerun()
 
 try:
-    df_brut, en_direct = charger_velib_brut()
+    df, rapport, en_direct = charger_velib()
 except DonneesIndisponibles as erreur:
     st.error(str(erreur))
     st.stop()
 if not en_direct:
     st.warning("Pas de connexion : les données affichées sont celles du dernier téléchargement.")
-df, rapport = nettoyer_velib(df_brut)
+st.sidebar.caption(f"🚲 Vélib mis à jour à {heure_paris(df['duedate'].max())}")
 zones = zones_disponibles(df)  # communes, puis « Paris 1 » à « Paris 20 »
 
 onglet_duel, onglet_carte, onglet_meteo, onglet_nettoyage = st.tabs(
@@ -100,7 +124,7 @@ with onglet_carte:
 with onglet_meteo:
     st.subheader("Météo du moment à Paris (station Montsouris)")
     try:
-        meteo = meteo_actuelle()
+        meteo = charger_meteo()
     except CleMeteoAbsente as erreur:
         st.warning(str(erreur))
     except requests.RequestException:
@@ -110,6 +134,7 @@ with onglet_meteo:
         temperature.metric("🌡️ Température", f"{meteo['temperature_c']} °C")
         vent.metric("💨 Vent", f"{meteo['vent_kmh']} km/h")
         pluie.metric("🌧️ Pluie (6 dernières min)", f"{meteo['pluie_mm']} mm")
+        st.caption(f"Météo relevée à {heure_paris(meteo['heure_releve'])} (mise à jour toutes les 6 minutes)")
 
 with onglet_nettoyage:
     st.subheader("Rapport de nettoyage")
