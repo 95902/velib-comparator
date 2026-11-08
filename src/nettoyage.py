@@ -1,4 +1,5 @@
 """Nettoyage des données Vélib : du tableau brut au tableau du contrat (issue #4)."""
+import difflib
 import unicodedata
 
 import pandas as pd
@@ -10,6 +11,21 @@ COLONNES_CONTRAT = [
     "lat", "lon", "duedate",
 ]
 COLONNES_ENTIERES = ["capacity", "numbikesavailable", "numdocksavailable", "mechanical", "ebike"]
+
+
+class CommuneIntrouvable(ValueError):
+    """Le nom demandé n'est ni une commune ni un arrondissement du tableau.
+
+    Attributs : nom (le nom tapé) et suggestion (le nom proche à proposer, ou None).
+    """
+
+    def __init__(self, nom, suggestion=None):
+        message = f"Commune introuvable : « {nom} »."
+        if suggestion:
+            message += f" Vouliez-vous dire {suggestion} ?"
+        super().__init__(message)
+        self.nom = nom
+        self.suggestion = suggestion
 
 
 def normaliser(texte):
@@ -54,6 +70,17 @@ def zones_disponibles(df):
         key=lambda z: int(z.split()[1]),
     )
     return communes + [z.title() for z in arrondissements]
+
+
+def suggerer_zone(df, nom):
+    """Cherche le nom de commune ou d'arrondissement le plus proche d'une faute de frappe.
+
+    Reçoit : le tableau nettoyé et le nom tapé (ex. "montreuill").
+    Renvoie : le nom tel qu'affiché (ex. "Montreuil"), ou None si rien n'est assez proche.
+    """
+    noms = {normaliser(zone): zone for zone in zones_disponibles(df)}
+    proches = difflib.get_close_matches(normaliser(nom), list(noms), n=1, cutoff=0.6)
+    return noms[proches[0]] if proches else None
 
 
 def nettoyer_velib(df_brut):

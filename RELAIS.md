@@ -39,7 +39,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | #13 | C | Onglet Duel de `app.py` | `app-duel` | #34 | ✅ Fusionnée |
 | #14 | A | Colonne `zone` (arrondissements) | `zone-arrondissements` | #35 | ✅ Fusionnée |
 | #15 | B | Indicateurs relatifs, zones dans `compare.py` | `indicateurs-relatifs` | #36 | ✅ Fusionnée |
-| #17 | A | Gestion des erreurs | `gestion-erreurs` | — | ⏳ À faire |
+| #17 | A | Gestion des erreurs | `gestion-erreurs` | #37 | ✅ Fusionnée |
 | #16 | C | Onglets Météo, Carte, rapport, bouton Actualiser | `app-meteo-carte` | — | ⏳ À faire |
 | #25 | C | Cache et heure des données | `cache-temps-reel` | — | ⏳ À faire |
 | #26 | A/B/C | Utilisateurs et station conseillée | `mon-trajet` | — | ⏳ À faire |

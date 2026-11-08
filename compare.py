@@ -4,14 +4,15 @@ Lance : python compare.py Paris Montreuil
         python compare.py "Paris 11" Montreuil   (arrondissements : "Paris 1" à "Paris 20")
 """
 import argparse
+import sys
 
 from rich.console import Console
 from rich.table import Table
 
 from src.comparaison import EGALITE, bilan, comparer
 from src.indicateurs import stats_commune
-from src.nettoyage import nettoyer_velib
-from src.recuperation import telecharger_velib
+from src.nettoyage import CommuneIntrouvable, nettoyer_velib
+from src.recuperation import DonneesIndisponibles, charger_velib_brut
 
 
 def lire_arguments():
@@ -43,14 +44,19 @@ def afficher(lignes, nom_a, nom_b):
 
 def main():
     args = lire_arguments()
-    df, _ = nettoyer_velib(telecharger_velib())
-    lignes = comparer(
-        stats_commune(df, args.commune_a),
-        stats_commune(df, args.commune_b),
-        args.commune_a,
-        args.commune_b,
-    )
-    afficher(lignes, args.commune_a, args.commune_b)
+    erreurs = Console(stderr=True)
+    try:
+        df_brut, en_direct = charger_velib_brut()
+        df, _ = nettoyer_velib(df_brut)
+        stats_a = stats_commune(df, args.commune_a)
+        stats_b = stats_commune(df, args.commune_b)
+    except (DonneesIndisponibles, CommuneIntrouvable) as erreur:
+        erreurs.print(f"[bold red]Erreur :[/bold red] {erreur}")
+        sys.exit(1)
+
+    if not en_direct:
+        erreurs.print("[yellow]Pas de connexion : résultats du dernier téléchargement (data/brut/velib.csv).[/yellow]")
+    afficher(comparer(stats_a, stats_b, args.commune_a, args.commune_b), args.commune_a, args.commune_b)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """Calcul des indicateurs d'une commune (ou d'un arrondissement) à partir du tableau nettoyé."""
-from src.nettoyage import normaliser
+from src.nettoyage import CommuneIntrouvable, normaliser, suggerer_zone
 
 
 def pourcentage(partie, total):
@@ -32,11 +32,11 @@ def stats_commune(df, nom):
       - velos_par_station : vélos disponibles / stations en service, arrondi à 0,1 ;
       - part_electriques : vélos électriques / vélos disponibles, en %.
     Les stations hors service (en_service faux) ne comptent pas.
-    Lève ValueError si la commune n'existe pas dans le tableau.
+    Lève CommuneIntrouvable (avec une suggestion) si le nom n'existe pas dans le tableau.
     """
     stations = stations_de(df, nom)
     if stations.empty:
-        raise ValueError(f"Commune introuvable : {nom}")
+        raise CommuneIntrouvable(nom, suggerer_zone(df, nom))
 
     en_service = stations[stations["en_service"]]
     nb_stations = len(en_service)
