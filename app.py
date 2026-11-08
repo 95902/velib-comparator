@@ -7,6 +7,8 @@ import pydeck as pdk
 import requests
 import streamlit as st
 
+from src.analyse_pluie import conclusion, effet_pluie, par_releve
+from src.collecte import lire_historique
 from src.comparaison import EGALITE, bilan, comparer
 from src.indicateurs import etat_station, stations_de, stats_commune
 from src.meteo import CleMeteoAbsente, meteo_actuelle
@@ -62,8 +64,8 @@ if not en_direct:
 st.sidebar.caption(f"🚲 Vélib mis à jour à {heure_paris(df['duedate'].max())}")
 zones = zones_disponibles(df)  # communes, puis « Paris 1 » à « Paris 20 »
 
-onglet_duel, onglet_trajet, onglet_carte, onglet_meteo, onglet_nettoyage = st.tabs(
-    ["⚔️ Duel", "🧭 Mon trajet", "🗺️ Carte", "🌦️ Météo", "🧹 Nettoyage"]
+onglet_duel, onglet_trajet, onglet_carte, onglet_meteo, onglet_pluie, onglet_nettoyage = st.tabs(
+    ["⚔️ Duel", "🧭 Mon trajet", "🗺️ Carte", "🌦️ Météo", "🌧️ Pluie", "🧹 Nettoyage"]
 )
 
 with onglet_duel:
@@ -179,6 +181,19 @@ with onglet_meteo:
         vent.metric("💨 Vent", f"{meteo['vent_kmh']} km/h")
         pluie.metric("🌧️ Pluie (6 dernières min)", f"{meteo['pluie_mm']} mm")
         st.caption(f"Météo relevée à {heure_paris(meteo['heure_releve'])} (mise à jour toutes les 6 minutes)")
+
+with onglet_pluie:
+    st.subheader("Effet de la pluie sur le remplissage")
+    historique = lire_historique()
+    if historique is None:
+        st.info("Aucun historique pour l'instant : lance `python collecter.py` (un relevé toutes les 15 minutes).")
+    else:
+        releves = par_releve(historique)
+        st.markdown(conclusion(effet_pluie(historique)))
+        st.dataframe(effet_pluie(historique))
+        st.caption(f"{len(releves)} relevés, du {releves['horodatage'].min():%d/%m %H:%M} au {releves['horodatage'].max():%d/%m %H:%M} (UTC)")
+        st.line_chart(releves.set_index("horodatage")[["taux_moyen"]], y_label="Taux moyen (%)")
+        st.bar_chart(releves.set_index("horodatage")[["pluie_mm"]], y_label="Pluie (mm / 6 min)")
 
 with onglet_nettoyage:
     st.subheader("Rapport de nettoyage")
