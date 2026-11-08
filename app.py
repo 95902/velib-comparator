@@ -14,7 +14,7 @@ from src.indicateurs import etat_station, stations_de, stats_commune
 from src.meteo import CleMeteoAbsente, meteo_actuelle
 from src.nettoyage import nettoyer_velib, zones_disponibles
 from src.recuperation import DonneesIndisponibles, charger_utilisateurs, charger_velib_brut
-from src.trajet import station_conseillee
+from src.trajet import distance_m, station_conseillee, stations_proches
 
 # Couleur de chaque état de station sur la carte (rouge, vert, bleu, opacité)
 COULEURS = {
@@ -109,6 +109,7 @@ with onglet_trajet:
         lieux = list(utilisateurs[nom])
         depart = choix_depart.selectbox("Départ", lieux, index=0)
         arrivee = choix_arrivee.selectbox("Arrivée", lieux, index=min(1, len(lieux) - 1))
+        rayon = st.slider("Stations affichées autour du départ et de l'arrivée (mètres)", 200, 1500, 500, step=100)
         point_depart, point_arrivee = utilisateurs[nom][depart], utilisateurs[nom][arrivee]
 
         prise = station_conseillee(df, point_depart["lat"], point_depart["lon"], "velo")
@@ -121,25 +122,69 @@ with onglet_trajet:
         else:
             st.success(
                 f"{nom}, {depart} → {arrivee} : prends un vélo à **{prise['name']}** "
-                f"({prise['nombre']} vélos, {prise['distance_m']} m), dépose-le à **{depot['name']}** "
+                f"({prise['nombre']} vélos : {prise['mechanical']} 🚲 mécaniques, {prise['ebike']} ⚡ électriques, "
+                f"{prise['distance_m']} m), dépose-le à **{depot['name']}** "
                 f"({depot['nombre']} bornes libres, {depot['distance_m']} m)."
             )
-            points = pd.DataFrame([
-                {"nom": f"{depart} ({nom})", "lat": point_depart["lat"], "lon": point_depart["lon"], "couleur": [0, 90, 255, 220]},
-                {"nom": f"Prendre : {prise['name']}", "lat": prise["lat"], "lon": prise["lon"], "couleur": COULEURS["disponible"]},
-                {"nom": f"Déposer : {depot['name']}", "lat": depot["lat"], "lon": depot["lon"], "couleur": COULEURS["pleine"]},
-                {"nom": f"{arrivee} ({nom})", "lat": point_arrivee["lat"], "lon": point_arrivee["lon"], "couleur": [0, 90, 255, 220]},
+
+            longueur = distance_m(point_depart["lat"], point_depart["lon"], point_arrivee["lat"], point_arrivee["lon"])
+            st.caption(f"Trajet à vol d'oiseau : {longueur / 1000:.1f} km")
+
+            # Toutes les stations autour du départ et de l'arrivée, colorées selon leur état
+            autour_depart = stations_proches(df, point_depart["lat"], point_depart["lon"], rayon)
+            autour_arrivee = stations_proches(df, point_arrivee["lat"], point_arrivee["lon"], rayon)
+            autour = pd.concat([autour_depart, autour_arrivee]).drop_duplicates("stationcode")
+            autour["etat"] = etat_station(autour)
+            autour["couleur"] = autour["etat"].map(COULEURS)
+            autour["nom"] = autour["name"]
+            autour["detail"] = [
+                f"{etat} · {meca} 🚲 mécaniques · {elec} ⚡ électriques · {bornes} bornes libres"
+                for etat, meca, elec, bornes in zip(autour["etat"], autour["mechanical"], autour["ebike"], autour["numdocksavailable"])
+            ]
+
+            # Lieux de l'utilisateur (bleu) et stations conseillées (entourées de noir)
+            reperes = pd.DataFrame([
+                {"nom": f"{depart} ({nom})", "detail": "point de départ", "lat": point_depart["lat"], "lon": point_depart["lon"], "couleur": [0, 90, 255, 230]},
+                {"nom": f"{arrivee} ({nom})", "detail": "point d'arrivée", "lat": point_arrivee["lat"], "lon": point_arrivee["lon"], "couleur": [0, 90, 255, 230]},
+                {"nom": f"Prendre : {prise['name']}", "detail": f"{prise['mechanical']} 🚲 mécaniques · {prise['ebike']} ⚡ électriques",
+                 "lat": prise["lat"], "lon": prise["lon"], "couleur": COULEURS["disponible"]},
+                {"nom": f"Déposer : {depot['name']}", "detail": f"{depot['nombre']} bornes libres",
+                 "lat": depot["lat"], "lon": depot["lon"], "couleur": COULEURS["disponible"]},
             ])
-            st.caption("🔵 départ et arrivée · 🟢 station où prendre le vélo · 🟠 station où le déposer")
+
+            st.caption("🔵 départ et arrivée · gros points cerclés : stations conseillées · "
+                       "🟢 disponible · 🔴 vide · 🟠 pleine · ⚪ hors service — survole un point pour le détail")
+            colonnes_carte = ["nom", "detail", "lat", "lon", "couleur"]
             st.pydeck_chart(pdk.Deck(
                 map_style=None,
-                initial_view_state=pdk.ViewState(latitude=points["lat"].mean(), longitude=points["lon"].mean(), zoom=12),
-                layers=[pdk.Layer(
-                    "ScatterplotLayer", data=points, get_position="[lon, lat]", get_fill_color="couleur",
-                    get_radius=60, radius_min_pixels=6, pickable=True,
-                )],
-                tooltip={"text": "{nom}"},
+                initial_view_state=pdk.ViewState(
+                    latitude=(point_depart["lat"] + point_arrivee["lat"]) / 2,
+                    longitude=(point_depart["lon"] + point_arrivee["lon"]) / 2,
+                    # Plus le trajet est long, plus on dézoome pour voir les deux bouts
+                    zoom=13 if longueur < 4000 else 12 if longueur < 9000 else 11,
+                ),
+                layers=[
+                    pdk.Layer("ScatterplotLayer", data=autour[colonnes_carte], get_position="[lon, lat]",
+                              get_fill_color="couleur", get_radius=25, radius_min_pixels=4, pickable=True),
+                    pdk.Layer("ScatterplotLayer", data=reperes, get_position="[lon, lat]", get_fill_color="couleur",
+                              get_radius=45, radius_min_pixels=8, stroked=True, get_line_color=[0, 0, 0, 255],
+                              line_width_min_pixels=2, pickable=True),
+                ],
+                tooltip={"text": "{nom}\n{detail}"},
             ))
+
+            # Tableaux : disponibilité détaillée des stations autour de chaque lieu
+            colonnes_tableau = {
+                "name": "Station", "distance_m": "Distance (m)", "mechanical": "🚲 Mécaniques",
+                "ebike": "⚡ Électriques", "numdocksavailable": "Bornes libres", "etat": "État",
+            }
+            for titre, stations in [
+                (f"Autour du départ ({depart})", autour_depart),
+                (f"Autour de l'arrivée ({arrivee})", autour_arrivee),
+            ]:
+                st.markdown(f"**{titre}** : {len(stations)} station(s) à moins de {rayon} m")
+                stations = stations.assign(etat=etat_station(stations))
+                st.dataframe(stations[list(colonnes_tableau)].rename(columns=colonnes_tableau), hide_index=True)
 
 with onglet_carte:
     choix = st.selectbox("Zone à afficher", [TOUTES] + zones)
@@ -156,7 +201,7 @@ with onglet_carte:
         ),
         layers=[pdk.Layer(
             "ScatterplotLayer",
-            data=carte[["name", "etat", "numbikesavailable", "numdocksavailable", "lat", "lon", "couleur"]],
+            data=carte[["name", "etat", "mechanical", "ebike", "numdocksavailable", "lat", "lon", "couleur"]],
             get_position="[lon, lat]",
             get_fill_color="couleur",
             get_radius=40,

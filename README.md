@@ -76,7 +76,7 @@ streamlit run app.py
 | Onglet | Contenu |
 |---|---|
 | ⚔️ Duel | Deux communes ou arrondissements côte à côte, 🏆 sur chaque indicateur gagnant, gagnant global |
-| 🧭 Mon trajet | Pour un utilisateur (inventé) et un trajet, la station où prendre un vélo et celle où le déposer |
+| 🧭 Mon trajet | Pour un utilisateur (inventé) et un trajet : la station où prendre un vélo et celle où le déposer, et toutes les stations autour du départ et de l'arrivée (vélos mécaniques, électriques, bornes libres) |
 | 🗺️ Carte | Toutes les stations : 🟢 disponible, 🔴 vide, 🟠 pleine, ⚪ hors service ; détail au survol |
 | 🌦️ Météo | Température, vent et pluie à Paris-Montsouris |
 | 🌧️ Pluie | Effet de la pluie sur le remplissage, d'après l'historique collecté |

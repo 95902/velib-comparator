@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from src import recuperation
-from src.trajet import distance_m, station_conseillee
+from src.trajet import distance_m, station_conseillee, stations_proches
 
 # Coordonnées des stations figées (tests/donnees_test.csv)
 MONGE = (48.843893, 2.351966)        # Lacépède - Monge : vide
@@ -25,6 +25,7 @@ def test_distance_connue():
 def test_prendre_un_velo_a_cote(df_test):
     station = station_conseillee(df_test, *SAINT_SULPICE, "velo")
     assert (station["name"], station["distance_m"], station["nombre"]) == ("Saint-Sulpice", 0, 11)
+    assert (station["mechanical"], station["ebike"]) == (2, 9)
 
 
 def test_station_vide_ignoree(df_test):
@@ -70,3 +71,12 @@ def test_utilisateurs_absents(monkeypatch, tmp_path):
     monkeypatch.setattr(recuperation, "CHEMIN_UTILISATEURS", tmp_path / "absent.json")
     with pytest.raises(FileNotFoundError, match="utilisateurs"):
         recuperation.charger_utilisateurs()
+
+
+def test_stations_proches(df_test):
+    # Autour de Lacépède - Monge : elle-même (0 m) puis Lacépède - Linné (~200 m)
+    proches = stations_proches(df_test, *MONGE, rayon_m=500)
+    assert proches["name"].tolist() == ["Lacépède - Monge", "Lacépède - Linné"]
+    assert proches["distance_m"].iloc[0] == 0
+    # Saint-Sulpice et Raspail - Bac (hors service) sont dans un rayon de 2 km
+    assert len(stations_proches(df_test, *SAINT_SULPICE, rayon_m=2000)) == 4
