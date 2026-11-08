@@ -47,7 +47,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | #21 | Bonus | Collecte de l'historique | `collecte-historique` | #41 | ✅ Fusionnée |
 | #22 | Bonus | Effet de la pluie (outil prêt ; issue laissée ouverte : conclusion après quelques jours de collecte) | `effet-pluie` | #42 | ✅ Fusionnée |
 | #18 | B | Relecture et nettoyage | `relecture` | #43 | ✅ Fusionnée |
-| #19 | C | README | `readme` | — | ⏳ À faire |
+| #19 | C | README | `readme` | #44 | ✅ Fusionnée |
 | #20 | Équipe | Checklist finale | — | — | Vérifiée en commentaire sur l'issue (points humains à cocher en équipe) |
 
 ## Points à faire par l'équipe (non automatisables)
