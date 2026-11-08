@@ -32,7 +32,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | — | Équipe | Fichier relais | `relais` | #27 | ✅ Fusionnée |
 | #8 | A | `nettoyer_velib()`, `normaliser()`, rapport | `nettoyage-velib` | #28 | ✅ Fusionnée |
 | #6 | B | `stats_commune()` + `tests/donnees_test.csv` | `stats-commune` | #29 | ✅ Fusionnée |
-| #9 | B | `comparer()` et ses tests | `comparer` | — | ⏳ À faire |
+| #9 | B | `comparer()` et ses tests | `comparer` | #30 | ✅ Fusionnée |
 | #10 | C | `meteo_actuelle()` | `meteo` | — | ⏳ À faire |
 | #11 | A | Tests du nettoyage, vraies données | `tests-nettoyage` | — | ⏳ À faire |
 | #12 | B | `compare.py` (argparse + rich) | `compare-cli` | — | ⏳ À faire |
