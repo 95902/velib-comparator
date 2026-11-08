@@ -23,6 +23,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | `zone` | Commune normalisée ; pour Paris, `"paris N"` d'après les premiers chiffres du `stationcode` (`10202` → `paris 10`, `3012` → `paris 3`). Les 2 codes hors règle (`60001`, `60002`) restent en `"paris"`. |
 | `normaliser()` | Minuscules, sans accents, tirets et apostrophes remplacés par des espaces (`Saint-Denis` → `saint denis`). |
 | Météo | API Météo-France **DPObs v2** (la clé est abonnée à la v2, pas à la v1), `station/infrahoraire-6m`, station Paris-Montsouris `75114001`. Champs : `t` (K), `ff` (m/s), `rr_per` (mm sur 6 min), `validity_time`. |
+| Météo et usage (#22) | L'API ne donne pas les trajets : moins de cyclistes → taux de remplissage plus haut ; électriques préférés → part d'électriques en station plus basse. Pluie comparée **à créneau égal** (heure de Paris, semaine / week-end) pour ne pas confondre avec l'heure de pointe. |
 | Trajet (#26) | `distance_m()` (haversine) et `station_conseillee()` dans `src/trajet.py` ; `charger_utilisateurs()` dans `src/recuperation.py`. Distance arrondie au mètre, puis départage par le nombre de vélos / bornes. |
 | Gagnant | Plus grand = mieux, sauf `stations_vides` et `pct_stations_vides` (moins = mieux). Valeurs égales → `Égalité`. |
 
@@ -52,6 +53,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | — | C | Mon trajet : filtre vélo électrique / mécanique | `filtre-type-velo` | #46 | ✅ Fusionnée |
 | — | C | Carte : filtre vélo électrique / mécanique | `carte-type-velo` | #47 | ✅ Fusionnée |
 | — | A | Panne de l'open data : réponses vides refusées, CSV de secours protégé | `donnees-velib-invalides` | #48 | ✅ Fusionnée |
+| #22 | Bonus | Météo et vélos : part d'électriques, température, comparaison à heure égale | `analyse-meteo-usage` | — | ⏳ À faire |
 | #20 | Équipe | Checklist finale | — | — | Vérifiée en commentaire sur l'issue (points humains à cocher en équipe) |
 
 ## Points à faire par l'équipe (non automatisables)
