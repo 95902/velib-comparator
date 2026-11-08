@@ -41,7 +41,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | #15 | B | Indicateurs relatifs, zones dans `compare.py` | `indicateurs-relatifs` | #36 | ✅ Fusionnée |
 | #17 | A | Gestion des erreurs | `gestion-erreurs` | #37 | ✅ Fusionnée |
 | #16 | C | Onglets Météo, Carte, rapport, bouton Actualiser | `app-meteo-carte` | #38 | ✅ Fusionnée |
-| #25 | C | Cache et heure des données | `cache-temps-reel` | — | ⏳ À faire |
+| #25 | C | Cache et heure des données | `cache-temps-reel` | #39 | ✅ Fusionnée |
 | #26 | A/B/C | Utilisateurs et station conseillée | `mon-trajet` | — | ⏳ À faire |
 | #21 | Bonus | Collecte de l'historique | `collecte-historique` | — | ⏳ À faire |
 | #22 | Bonus | Effet de la pluie | `effet-pluie` | — | ⏳ À faire |
