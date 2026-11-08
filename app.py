@@ -2,24 +2,30 @@
 
 Lance : streamlit run app.py
 """
-import os
-
+import pydeck as pdk
+import requests
 import streamlit as st
-from dotenv import load_dotenv
 
 from src.comparaison import EGALITE, bilan, comparer
-from src.indicateurs import stats_commune
+from src.indicateurs import etat_station, stations_de, stats_commune
+from src.meteo import CleMeteoAbsente, meteo_actuelle
 from src.nettoyage import nettoyer_velib, zones_disponibles
 from src.recuperation import DonneesIndisponibles, charger_velib_brut
 
-load_dotenv()  # lit le fichier .env (clé Météo-France) s'il existe
+# Couleur de chaque état de station sur la carte (rouge, vert, bleu, opacité)
+COULEURS = {
+    "disponible": [40, 167, 69, 200],
+    "vide": [220, 53, 69, 200],
+    "pleine": [255, 153, 0, 200],
+    "hors service": [150, 150, 150, 160],
+}
+TOUTES = "Toutes les stations"
 
 st.set_page_config(page_title="Comparateur Vélib", page_icon="🚲", layout="wide")
 st.title("🚲 Comparateur Vélib")
 
-# On affiche seulement si la clé est présente, jamais sa valeur
-if not os.getenv("METEO_FRANCE_API_KEY"):
-    st.sidebar.warning("Clé Météo-France absente : copie .env.example en .env et colle ta clé (voir README).")
+if st.sidebar.button("🔄 Actualiser", help="Retélécharge les données Vélib et la météo"):
+    st.rerun()
 
 try:
     df_brut, en_direct = charger_velib_brut()
@@ -31,7 +37,9 @@ if not en_direct:
 df, rapport = nettoyer_velib(df_brut)
 zones = zones_disponibles(df)  # communes, puis « Paris 1 » à « Paris 20 »
 
-(onglet_duel,) = st.tabs(["⚔️ Duel"])
+onglet_duel, onglet_carte, onglet_meteo, onglet_nettoyage = st.tabs(
+    ["⚔️ Duel", "🗺️ Carte", "🌦️ Météo", "🧹 Nettoyage"]
+)
 
 with onglet_duel:
     colonne_a, colonne_b = st.columns(2)
@@ -62,3 +70,54 @@ with onglet_duel:
          for l in lignes],
         hide_index=True,
     )
+
+with onglet_carte:
+    choix = st.selectbox("Zone à afficher", [TOUTES] + zones)
+    carte = (df if choix == TOUTES else stations_de(df, choix)).copy()
+    carte["etat"] = etat_station(carte)
+    carte["couleur"] = carte["etat"].map(COULEURS)
+
+    st.caption("🟢 disponible · 🔴 vide · 🟠 pleine · ⚪ hors service — survole un point pour le détail")
+    st.pydeck_chart(pdk.Deck(
+        map_style=None,  # fond de carte par défaut de Streamlit, sans clé
+        initial_view_state=pdk.ViewState(
+            latitude=carte["lat"].mean(), longitude=carte["lon"].mean(),
+            zoom=11 if choix == TOUTES else 13,
+        ),
+        layers=[pdk.Layer(
+            "ScatterplotLayer",
+            data=carte[["name", "etat", "numbikesavailable", "numdocksavailable", "lat", "lon", "couleur"]],
+            get_position="[lon, lat]",
+            get_fill_color="couleur",
+            get_radius=40,
+            radius_min_pixels=3,
+            pickable=True,
+        )],
+        tooltip={"text": "{name}\n{etat}\n{numbikesavailable} vélos · {numdocksavailable} bornes libres"},
+    ))
+    st.write(carte["etat"].value_counts().rename("stations"))
+
+with onglet_meteo:
+    st.subheader("Météo du moment à Paris (station Montsouris)")
+    try:
+        meteo = meteo_actuelle()
+    except CleMeteoAbsente as erreur:
+        st.warning(str(erreur))
+    except requests.RequestException:
+        st.error("L'API Météo-France ne répond pas pour l'instant. Réessaie avec « Actualiser ».")
+    else:
+        temperature, vent, pluie = st.columns(3)
+        temperature.metric("🌡️ Température", f"{meteo['temperature_c']} °C")
+        vent.metric("💨 Vent", f"{meteo['vent_kmh']} km/h")
+        pluie.metric("🌧️ Pluie (6 dernières min)", f"{meteo['pluie_mm']} mm")
+
+with onglet_nettoyage:
+    st.subheader("Rapport de nettoyage")
+    st.write(
+        f"Sur **{rapport['stations_brutes']}** stations téléchargées : "
+        f"**{rapport['doublons_retires']}** doublon(s) retiré(s), "
+        f"**{rapport['hors_service']}** station(s) hors service (gardées, en gris sur la carte, "
+        f"mais exclues des indicateurs), dont **{rapport['capacite_nulle']}** à capacité nulle."
+    )
+    st.metric("Stations dans le tableau nettoyé", rapport["stations_finales"])
+    st.dataframe(df[~df["en_service"]][["stationcode", "name", "commune", "capacity"]], hide_index=True)

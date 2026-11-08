@@ -40,7 +40,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | #14 | A | Colonne `zone` (arrondissements) | `zone-arrondissements` | #35 | ✅ Fusionnée |
 | #15 | B | Indicateurs relatifs, zones dans `compare.py` | `indicateurs-relatifs` | #36 | ✅ Fusionnée |
 | #17 | A | Gestion des erreurs | `gestion-erreurs` | #37 | ✅ Fusionnée |
-| #16 | C | Onglets Météo, Carte, rapport, bouton Actualiser | `app-meteo-carte` | — | ⏳ À faire |
+| #16 | C | Onglets Météo, Carte, rapport, bouton Actualiser | `app-meteo-carte` | #38 | ✅ Fusionnée |
 | #25 | C | Cache et heure des données | `cache-temps-reel` | — | ⏳ À faire |
 | #26 | A/B/C | Utilisateurs et station conseillée | `mon-trajet` | — | ⏳ À faire |
 | #21 | Bonus | Collecte de l'historique | `collecte-historique` | — | ⏳ À faire |

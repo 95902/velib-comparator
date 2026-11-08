@@ -1,4 +1,6 @@
 """Calcul des indicateurs d'une commune (ou d'un arrondissement) à partir du tableau nettoyé."""
+import pandas as pd
+
 from src.nettoyage import CommuneIntrouvable, normaliser, suggerer_zone
 
 
@@ -16,6 +18,20 @@ def stations_de(df, nom):
     """
     nom_norm = normaliser(nom)
     return df[(df["commune_norm"] == nom_norm) | (df["zone"] == nom_norm)]
+
+
+def etat_station(df):
+    """Donne l'état de chaque station, pour colorer la carte.
+
+    Reçoit : le tableau nettoyé.
+    Renvoie : une Series de textes alignée sur df : "hors service", "vide" (0 vélo),
+    "pleine" (0 borne libre) ou "disponible".
+    """
+    etat = pd.Series("disponible", index=df.index)
+    etat[df["numdocksavailable"] == 0] = "pleine"
+    etat[df["numbikesavailable"] == 0] = "vide"
+    etat[~df["en_service"]] = "hors service"
+    return etat
 
 
 def stats_commune(df, nom):
