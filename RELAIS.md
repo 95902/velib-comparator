@@ -23,6 +23,7 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 | `zone` | Commune normalisée ; pour Paris, `"paris N"` d'après les premiers chiffres du `stationcode` (`10202` → `paris 10`, `3012` → `paris 3`). Les 2 codes hors règle (`60001`, `60002`) restent en `"paris"`. |
 | `normaliser()` | Minuscules, sans accents, tirets et apostrophes remplacés par des espaces (`Saint-Denis` → `saint denis`). |
 | Météo | API Météo-France **DPObs v2** (la clé est abonnée à la v2, pas à la v1), `station/infrahoraire-6m`, station Paris-Montsouris `75114001`. Champs : `t` (K), `ff` (m/s), `rr_per` (mm sur 6 min), `validity_time`. |
+| Trajet (#26) | `distance_m()` (haversine) et `station_conseillee()` dans `src/trajet.py` ; `charger_utilisateurs()` dans `src/recuperation.py`. Distance arrondie au mètre, puis départage par le nombre de vélos / bornes. |
 | Gagnant | Plus grand = mieux, sauf `stations_vides` et `pct_stations_vides` (moins = mieux). Valeurs égales → `Égalité`. |
 
 ## Avancement
@@ -52,5 +53,5 @@ lis ce fichier ; après chaque PR fusionnée, mets à jour sa ligne.
 ## Points à faire par l'équipe (non automatisables)
 
 - Chaque membre relit le code des autres rôles et sait l'expliquer (#18, #20).
-- Les questions ouvertes de #26 (utilisateurs ajoutés depuis l'appli, préférence électrique, station de secours) restent à trancher.
+- Questions ouvertes de #26 : version simple codée (utilisateurs fixés dans `data/utilisateurs.json`, pas de préférence électrique, pas de station de secours). À rediscuter en équipe si on veut aller plus loin.
 - Répéter la présentation (#20).

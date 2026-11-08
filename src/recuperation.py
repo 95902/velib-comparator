@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -5,6 +6,7 @@ import requests
 
 URL_VELIB = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/exports/json"
 CHEMIN_BRUT = Path(__file__).resolve().parent.parent / "data" / "brut" / "velib.csv"
+CHEMIN_UTILISATEURS = Path(__file__).resolve().parent.parent / "data" / "utilisateurs.json"
 
 
 class DonneesIndisponibles(RuntimeError):
@@ -45,6 +47,19 @@ def charger_velib_brut():
                 "et aucun téléchargement précédent n'est disponible."
             ) from erreur
         return pd.read_csv(CHEMIN_BRUT, dtype={"stationcode": str}), False
+
+
+def charger_utilisateurs():
+    """Lit les utilisateurs (inventés) et leurs lieux habituels.
+
+    Reçoit : rien (lit data/utilisateurs.json).
+    Renvoie : une liste de dicts {"nom": ..., "lieux": {"domicile": {"lat": ..., "lon": ...}, ...}}.
+    Lève FileNotFoundError avec un message clair si le fichier manque.
+    """
+    if not CHEMIN_UTILISATEURS.exists():
+        raise FileNotFoundError(f"Fichier des utilisateurs introuvable : {CHEMIN_UTILISATEURS}")
+    with open(CHEMIN_UTILISATEURS, encoding="utf-8") as fichier:
+        return json.load(fichier)
 
 
 if __name__ == "__main__":
