@@ -1,0 +1,24 @@
+[
+  {
+    "nom": "Alice",
+    "lieux": {
+      "domicile": {"lat": 48.8516, "lon": 2.3308},
+      "travail": {"lat": 48.8331, "lon": 2.2994}
+    }
+  },
+  {
+    "nom": "Bruno",
+    "lieux": {
+      "domicile": {"lat": 48.8610, "lon": 2.4410},
+      "travail": {"lat": 48.8443, "lon": 2.3744},
+      "sport": {"lat": 48.8473, "lon": 2.4390}
+    }
+  },
+  {
+    "nom": "Chloé",
+    "lieux": {
+      "domicile": {"lat": 48.9350, "lon": 2.3570},
+      "université": {"lat": 48.8467, "lon": 2.3549}
+    }
+  }
+]

@@ -11,7 +11,8 @@ from src.comparaison import EGALITE, bilan, comparer
 from src.indicateurs import etat_station, stations_de, stats_commune
 from src.meteo import CleMeteoAbsente, meteo_actuelle
 from src.nettoyage import nettoyer_velib, zones_disponibles
-from src.recuperation import DonneesIndisponibles, charger_velib_brut
+from src.recuperation import DonneesIndisponibles, charger_utilisateurs, charger_velib_brut
+from src.trajet import station_conseillee
 
 # Couleur de chaque état de station sur la carte (rouge, vert, bleu, opacité)
 COULEURS = {
@@ -61,8 +62,8 @@ if not en_direct:
 st.sidebar.caption(f"🚲 Vélib mis à jour à {heure_paris(df['duedate'].max())}")
 zones = zones_disponibles(df)  # communes, puis « Paris 1 » à « Paris 20 »
 
-onglet_duel, onglet_carte, onglet_meteo, onglet_nettoyage = st.tabs(
-    ["⚔️ Duel", "🗺️ Carte", "🌦️ Météo", "🧹 Nettoyage"]
+onglet_duel, onglet_trajet, onglet_carte, onglet_meteo, onglet_nettoyage = st.tabs(
+    ["⚔️ Duel", "🧭 Mon trajet", "🗺️ Carte", "🌦️ Météo", "🧹 Nettoyage"]
 )
 
 with onglet_duel:
@@ -94,6 +95,49 @@ with onglet_duel:
          for l in lignes],
         hide_index=True,
     )
+
+with onglet_trajet:
+    try:
+        utilisateurs = {u["nom"]: u["lieux"] for u in charger_utilisateurs()}
+    except FileNotFoundError as erreur:
+        st.error(str(erreur))
+    else:
+        choix_utilisateur, choix_depart, choix_arrivee = st.columns(3)
+        nom = choix_utilisateur.selectbox("Utilisateur", list(utilisateurs))
+        lieux = list(utilisateurs[nom])
+        depart = choix_depart.selectbox("Départ", lieux, index=0)
+        arrivee = choix_arrivee.selectbox("Arrivée", lieux, index=1)
+        point_depart, point_arrivee = utilisateurs[nom][depart], utilisateurs[nom][arrivee]
+
+        prise = station_conseillee(df, point_depart["lat"], point_depart["lon"], "velo")
+        depot = station_conseillee(df, point_arrivee["lat"], point_arrivee["lon"], "borne")
+
+        if depart == arrivee:
+            st.info("Choisis deux lieux différents.")
+        elif prise is None or depot is None:
+            st.error("Aucune station en service ne convient pour ce trajet en ce moment.")
+        else:
+            st.success(
+                f"{nom}, {depart} → {arrivee} : prends un vélo à **{prise['name']}** "
+                f"({prise['nombre']} vélos, {prise['distance_m']} m), dépose-le à **{depot['name']}** "
+                f"({depot['nombre']} bornes libres, {depot['distance_m']} m)."
+            )
+            points = pd.DataFrame([
+                {"nom": f"{depart} ({nom})", "lat": point_depart["lat"], "lon": point_depart["lon"], "couleur": [0, 90, 255, 220]},
+                {"nom": f"Prendre : {prise['name']}", "lat": prise["lat"], "lon": prise["lon"], "couleur": COULEURS["disponible"]},
+                {"nom": f"Déposer : {depot['name']}", "lat": depot["lat"], "lon": depot["lon"], "couleur": COULEURS["pleine"]},
+                {"nom": f"{arrivee} ({nom})", "lat": point_arrivee["lat"], "lon": point_arrivee["lon"], "couleur": [0, 90, 255, 220]},
+            ])
+            st.caption("🔵 départ et arrivée · 🟢 station où prendre le vélo · 🟠 station où le déposer")
+            st.pydeck_chart(pdk.Deck(
+                map_style=None,
+                initial_view_state=pdk.ViewState(latitude=points["lat"].mean(), longitude=points["lon"].mean(), zoom=12),
+                layers=[pdk.Layer(
+                    "ScatterplotLayer", data=points, get_position="[lon, lat]", get_fill_color="couleur",
+                    get_radius=60, radius_min_pixels=6, pickable=True,
+                )],
+                tooltip={"text": "{nom}"},
+            ))
 
 with onglet_carte:
     choix = st.selectbox("Zone à afficher", [TOUTES] + zones)
