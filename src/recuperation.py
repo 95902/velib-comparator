@@ -7,6 +7,10 @@ URL_VELIB = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-d
 CHEMIN_BRUT = Path(__file__).resolve().parent.parent / "data" / "brut" / "velib.csv"
 
 
+class DonneesIndisponibles(RuntimeError):
+    """Ni l'API Vélib ni le dernier CSV téléchargé ne sont disponibles."""
+
+
 def telecharger_velib():
     """Télécharge la disponibilité en temps réel de toutes les stations Vélib.
 
@@ -23,6 +27,24 @@ def telecharger_velib():
     CHEMIN_BRUT.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(CHEMIN_BRUT, index=False)
     return df
+
+
+def charger_velib_brut():
+    """Télécharge les données Vélib, ou relit le dernier CSV si l'API ne répond pas.
+
+    Reçoit : rien.
+    Renvoie : (df_brut, en_direct) ; en_direct vaut False si on a dû relire data/brut/velib.csv.
+    Lève DonneesIndisponibles si l'API ne répond pas et que le CSV n'existe pas.
+    """
+    try:
+        return telecharger_velib(), True
+    except requests.RequestException as erreur:
+        if not CHEMIN_BRUT.exists():
+            raise DonneesIndisponibles(
+                "Impossible de joindre l'API Vélib (pas de connexion internet ?) "
+                "et aucun téléchargement précédent n'est disponible."
+            ) from erreur
+        return pd.read_csv(CHEMIN_BRUT, dtype={"stationcode": str}), False
 
 
 if __name__ == "__main__":

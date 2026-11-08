@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from src.comparaison import EGALITE, bilan, comparer
 from src.indicateurs import stats_commune
 from src.nettoyage import nettoyer_velib, zones_disponibles
-from src.recuperation import telecharger_velib
+from src.recuperation import DonneesIndisponibles, charger_velib_brut
 
 load_dotenv()  # lit le fichier .env (clé Météo-France) s'il existe
 
@@ -21,7 +21,14 @@ st.title("🚲 Comparateur Vélib")
 if not os.getenv("METEO_FRANCE_API_KEY"):
     st.sidebar.warning("Clé Météo-France absente : copie .env.example en .env et colle ta clé (voir README).")
 
-df, rapport = nettoyer_velib(telecharger_velib())
+try:
+    df_brut, en_direct = charger_velib_brut()
+except DonneesIndisponibles as erreur:
+    st.error(str(erreur))
+    st.stop()
+if not en_direct:
+    st.warning("Pas de connexion : les données affichées sont celles du dernier téléchargement.")
+df, rapport = nettoyer_velib(df_brut)
 zones = zones_disponibles(df)  # communes, puis « Paris 1 » à « Paris 20 »
 
 (onglet_duel,) = st.tabs(["⚔️ Duel"])
