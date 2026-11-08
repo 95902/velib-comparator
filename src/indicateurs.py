@@ -1,35 +1,56 @@
-"""Calcul des indicateurs d'une commune à partir du tableau nettoyé."""
+"""Calcul des indicateurs d'une commune (ou d'un arrondissement) à partir du tableau nettoyé."""
 from src.nettoyage import normaliser
 
 
-def stats_commune(df, nom):
-    """Calcule les indicateurs Vélib d'une commune.
+def pourcentage(partie, total):
+    """Reçoit deux nombres. Renvoie partie / total en %, arrondi à 0,1 (0.0 si total vaut 0)."""
+    return round(100 * partie / total, 1) if total else 0.0
 
-    Reçoit : le tableau nettoyé (colonnes du contrat) et un nom de commune
+
+def stations_de(df, nom):
+    """Sélectionne les stations d'une commune ou d'une zone.
+
+    Reçoit : le tableau nettoyé et un nom (« Paris », « Paris 11 », « montreuil »…).
+    Renvoie : les lignes dont commune_norm ou zone correspond au nom normalisé
+    (« Paris » donne tout Paris, « Paris 11 » seulement le 11ᵉ).
+    """
+    nom_norm = normaliser(nom)
+    return df[(df["commune_norm"] == nom_norm) | (df["zone"] == nom_norm)]
+
+
+def stats_commune(df, nom):
+    """Calcule les indicateurs Vélib d'une commune ou d'une zone.
+
+    Reçoit : le tableau nettoyé (colonnes du contrat) et un nom de commune ou de zone
     (n'importe quelle casse, avec ou sans accents).
     Renvoie : dict avec
       - nb_stations : stations en service ;
       - velos_dispo : vélos disponibles dans ces stations ;
-      - taux_remplissage : vélos / (vélos + bornes libres), en %, arrondi à 0,1 ;
-      - stations_vides : stations en service sans aucun vélo.
+      - taux_remplissage : vélos / (vélos + bornes libres), en % ;
+      - stations_vides : stations en service sans aucun vélo ;
+      - pct_stations_vides : stations vides / stations en service, en % ;
+      - velos_par_station : vélos disponibles / stations en service, arrondi à 0,1 ;
+      - part_electriques : vélos électriques / vélos disponibles, en %.
     Les stations hors service (en_service faux) ne comptent pas.
     Lève ValueError si la commune n'existe pas dans le tableau.
     """
-    nom_norm = normaliser(nom)
-    commune = df[df["commune_norm"] == nom_norm]
-    if commune.empty:
+    stations = stations_de(df, nom)
+    if stations.empty:
         raise ValueError(f"Commune introuvable : {nom}")
 
-    en_service = commune[commune["en_service"]]
+    en_service = stations[stations["en_service"]]
+    nb_stations = len(en_service)
     velos = int(en_service["numbikesavailable"].sum())
     bornes_libres = int(en_service["numdocksavailable"].sum())
-    # Seules les bornes qui fonctionnent comptent (décision #4) ; 0 station → 0 %
-    places = velos + bornes_libres
-    taux = round(100 * velos / places, 1) if places else 0.0
+    vides = int((en_service["numbikesavailable"] == 0).sum())
 
     return {
-        "nb_stations": len(en_service),
+        "nb_stations": nb_stations,
         "velos_dispo": velos,
-        "taux_remplissage": taux,
-        "stations_vides": int((en_service["numbikesavailable"] == 0).sum()),
+        # Seules les bornes qui fonctionnent comptent (décision #4)
+        "taux_remplissage": pourcentage(velos, velos + bornes_libres),
+        "stations_vides": vides,
+        "pct_stations_vides": pourcentage(vides, nb_stations),
+        "velos_par_station": round(velos / nb_stations, 1) if nb_stations else 0.0,
+        "part_electriques": pourcentage(int(en_service["ebike"].sum()), velos),
     }

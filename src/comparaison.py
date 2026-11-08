@@ -8,6 +8,9 @@ INDICATEURS = {
     "velos_dispo": ("Vélos disponibles", True),
     "taux_remplissage": ("Taux de remplissage (%)", True),
     "stations_vides": ("Stations vides", False),
+    "pct_stations_vides": ("Stations vides (%)", False),
+    "velos_par_station": ("Vélos par station", True),
+    "part_electriques": ("Part d'électriques (%)", True),
 }
 
 
